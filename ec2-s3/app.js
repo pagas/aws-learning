@@ -5,6 +5,8 @@ const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const app = express();
 const PORT = 3000;
 
+require("dotenv").config();
+
 const s3 = new S3Client({
     region: "us-east-1"
 });
