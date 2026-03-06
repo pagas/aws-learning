@@ -1,46 +1,31 @@
-
 #!/bin/bash
 set -e
 
-# ---------------------------
 # Update system
-# ---------------------------
 dnf update -y
 
-# ---------------------------
-# Install Node.js 22
-# ---------------------------
-dnf install -y nodejs-22
+# Install Node.js 22 and Git
+dnf install -y nodejs git
 
-# ---------------------------
-# Install Git
-# ---------------------------
-dnf install -y git
-
-# ---------------------------
 # Install PM2 globally
-# ---------------------------
 npm install -g pm2
 
-# ---------------------------
-# Fetch your application
-# (REPLACE with your repository)
-# ---------------------------
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git /app
-cd /app
+# Define the working directory
+APP_DIR="/home/ec2-user/aws-learning"
 
-# ---------------------------
-# Install dependencies
-# ---------------------------
-npm install --omit=dev
+# Clone and setup as ec2-user to avoid permission issues
+sudo -u ec2-user git clone https://github.com/pagas/aws-learning.git $APP_DIR
+cd $APP_DIR/ec2-s3
 
-# ---------------------------
-# Start the app with PM2
-# ---------------------------
-pm2 start npm --name myapp -- start
+# Install dependencies as ec2-user
+sudo -u ec2-user npm install --omit=dev
 
-# ---------------------------
-# PM2: enable reboot persistence
-# ---------------------------
-pm2 save
-pm2 startup systemd -u ec2-user --hp /home/ec2-user
+# Start app with PM2 as ec2-user
+sudo -u ec2-user pm2 start npm --name myapp -- start
+
+# Enable reboot persistence
+# This tells PM2 to freeze the current process list for ec2-user
+sudo -u ec2-user pm2 save
+
+# Automatically generate and run the startup script for systemd
+env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ec2-user --hp /home/ec2-user
